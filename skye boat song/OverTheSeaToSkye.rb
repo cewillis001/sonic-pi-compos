@@ -1,3 +1,6 @@
+# the skye boat song
+# arrangement from https://musescore.com/user/4714396/scores/5014605
+
 pianissimo = 0.1
 piano = 0.2
 mezzo_piano = 0.3
