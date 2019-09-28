@@ -28,7 +28,20 @@ if play_soprano
     #and of all the harm that ever I done
     play_pattern_timed [:a4, :g4, :f4,:f4,:f4,:f4, :f4,:f4,:g4], [0.5, 0.5, 1,1,1,1, 1,1,1], amp: mezzo_forte
     # alas it was to none but me
-    play_pattern_timed [], [], amp: mezzo_forte
+    play_pattern_timed [:f4,:g4, :a4,:d5,:c5,:a4, :g4,:a4,:a4], [0.5,0.5, 1,1,1,1, 1,1,1], amp: mezzo_forte
+    # and all ive done, for want of wit
+    2.times do
+      play_pattern_timed [:r,:a4, :c5,:a4,:d5,:c5], [0.5,0.5, 0.5,0.5,1,1], amp: forte
+    end
+    # to memory now i cant recall
+    play_pattern_timed [:r,:a4, :bf4,:a4,:g4,:f4, :bf4,:a4,:d4,:c4], [0.5,0.5, 1,0.25,0.25,2, 0.5,1,0.5,1.5], amp: forte
+    #  so fill to me the
+    play_pattern_timed [:a4,:g4, :f4,:d4,:d4,:c4], [0.25,0.25, 1.5,0.5,1,1], amp: forte
+    # parting glass, good night and joy
+    play_pattern_timed [:f4,:f4,:g4,:f4,:g4, :a4,:d5,:c5,], [1,1,1,0.5,0.5, 1,0.5,1.5], amp: fortissimo
+    #be to you all
+    play_pattern_timed [:a4,:a4,:d4,:d4], [1, 1,1,2], amp: mezzo_forte
+    
   end
 end
 
