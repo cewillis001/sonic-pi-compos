@@ -17,6 +17,42 @@ play_alto = true
 play_tenor = true
 play_bass = true
 
+define :soprano_chorus_phrase do
+  #speed bonnie boat/ carry the lad
+  play_pattern_timed [:d4, :e4, :d4, :g4], [1.5,0.5,1,2], amp: piano
+  #like a bird on the wing / that is born to be king
+  play_pattern_timed [:g4, :g4, :a4, :b4, :a4, :d5], [0.5, 0.5, 1.5, 0.5,1,3], amp: forte
+  #onward the / over the
+  play_pattern_timed [:b4, :a4, :b4], [1.5, 0.5, 1], amp: forte
+end
+
+define :alto_chorus_phrase do
+  #speed bonnie boat
+  play_pattern_timed [:b3, :b3, :b3, :e4], [1.5,0.5,1,2], amp: piano
+  #like a bird on the wing
+  play_pattern_timed [:e4, :e4, :e4, :e4, :fs4, :fs4], [0.5, 0.5, 1.5, 0.5,1,3], amp: forte
+  #onward the
+  play_pattern_timed [:g4, :g4, :g4], [1.5, 0.5, 1], amp: forte
+end
+
+define :tenor_chorus_phrase do
+  #speed bonnie boat
+  play_pattern_timed [:r, :g3, :a3, :g3, :b3], [1.5, 1.5,0.5,1,1.5], amp: piano
+  #like a bird on the wing
+  play_pattern_timed [:c4, :c4, :c4, :a3, :a3, :a3], [1, 1, 1, 0.5,0.5,2], amp: forte
+  #onward the
+  play_pattern_timed [:r, :d4, :c4, :c4], [1.5, 1.5, 0.5, 1], amp: forte
+end
+
+define :bass_chorus_phrase do
+  #speed bonnie boat
+  play_pattern_timed [:r, :g3, :e3, :e3, :e3], [1.5, 1.5,0.5,1,1.5], amp: piano
+  #like a bird on the wing
+  play_pattern_timed [:c3, :c3, :c3, :d3, :d3, :d3], [1, 1, 1, 0.5,0.5,2], amp: forte
+  #onward the
+  play_pattern_timed [:r, :g3, :e3, :e3], [1.5, 1.5, 0.5, 1], amp: forte
+end
+
 if play_soprano
   in_thread do
     4.times do
@@ -118,39 +154,3 @@ if play_bass
 end
 
 
-
-define :soprano_chorus_phrase do
-  #speed bonnie boat/ carry the lad
-  play_pattern_timed [:d4, :e4, :d4, :g4], [1.5,0.5,1,2], amp: piano
-  #like a bird on the wing / that is born to be king
-  play_pattern_timed [:g4, :g4, :a4, :b4, :a4, :d5], [0.5, 0.5, 1.5, 0.5,1,3], amp: forte
-  #onward the / over the
-  play_pattern_timed [:b4, :a4, :b4], [1.5, 0.5, 1], amp: forte
-end
-
-define :alto_chorus_phrase do
-  #speed bonnie boat
-  play_pattern_timed [:b3, :b3, :b3, :e4], [1.5,0.5,1,2], amp: piano
-  #like a bird on the wing
-  play_pattern_timed [:e4, :e4, :e4, :e4, :fs4, :fs4], [0.5, 0.5, 1.5, 0.5,1,3], amp: forte
-  #onward the
-  play_pattern_timed [:g4, :g4, :g4], [1.5, 0.5, 1], amp: forte
-end
-
-define :tenor_chorus_phrase do
-  #speed bonnie boat
-  play_pattern_timed [:r, :g3, :a3, :g3, :b3], [1.5, 1.5,0.5,1,1.5], amp: piano
-  #like a bird on the wing
-  play_pattern_timed [:c4, :c4, :c4, :a3, :a3, :a3], [1, 1, 1, 0.5,0.5,2], amp: forte
-  #onward the
-  play_pattern_timed [:r, :d4, :c4, :c4], [1.5, 1.5, 0.5, 1], amp: forte
-end
-
-define :bass_chorus_phrase do
-  #speed bonnie boat
-  play_pattern_timed [:r, :g3, :e3, :e3, :e3], [1.5, 1.5,0.5,1,1.5], amp: piano
-  #like a bird on the wing
-  play_pattern_timed [:c3, :c3, :c3, :d3, :d3, :d3], [1, 1, 1, 0.5,0.5,2], amp: forte
-  #onward the
-  play_pattern_timed [:r, :g3, :e3, :e3], [1.5, 1.5, 0.5, 1], amp: forte
-end
