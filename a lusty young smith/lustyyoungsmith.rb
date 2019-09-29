@@ -23,7 +23,28 @@ end
 if play_alto
   in_thread do
     # a lusty young smith at his
-    play_pattern_timed [:a3, :d4,:d4,:d4, :d4,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    in_thread do
+      play_pattern_timed [:a3, :d4,:d4,:d4, :d4,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    end
+    in_thread do
+      play_pattern_timed [:r, :d4,:d4,:d4, :d4,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    end
+    in_thread do
+      play_pattern_timed [:r, :r,:d4,:d4, :d4,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    end
+    in_thread do
+      play_pattern_timed [:r, :r,:r,:d4, :d4,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    end
+    in_thread do
+      play_pattern_timed [:r, :r,:r,:r, :d4,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    end
+    in_thread do
+      play_pattern_timed [:r, :r,:r,:r, :r,:cs4,:d4], [1, 1,1,1, 1,1,1]
+    end
+    in_thread do
+      play_pattern_timed [:r, :r,:r,:r, :r,:r,:d4], [1, 1,1,1, 1,1,1]
+    end
+    
     # vice stood a filing
     play_pattern_timed [:e4,:e4,:e4, :fs4,:d4], [1,1.5,0.5, 1,1]
     # his hammer laid by but his
