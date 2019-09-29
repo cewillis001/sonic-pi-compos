@@ -8,9 +8,9 @@ mezzo_forte = 0.4
 forte = 0.5
 fortissimo = 0.6
 
-use_bpm 80
+use_bpm 80 * 2
 
-use_synth :piano
+use_synth :beep
 
 play_soprano = true
 play_alto = true
