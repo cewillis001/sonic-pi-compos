@@ -16,11 +16,11 @@ play_bass = true
 
 # pitches, durations, volumes should have same number of elements
 # maybe I could make volumes a ring?
-BarStruct = Struct.new(:pitches, :durations, :volumes) do
-  def play
-    pitches.each_with_index do |pitch, index|
-      play_pattern_timed pitch, durations[index], volumes[index]
-    end
+
+def play_bar (pitches, durations, dynamic_start, dynamic_end)
+  volumes = (line dynamic_start, dynamic_end, steps: (pitches.length), inclusive: true)
+  pitches.each_with_index do |pitch, index|
+    play_pattern_timed [pitch], [durations[index]], amp: volumes[index]
   end
 end
 
@@ -38,10 +38,19 @@ if play_alto
 end
 
 if play_tenor
+  #define bars
+  bars = Array.new(1)
+  note_list = [:c4,:d4,:e4,:c4]
+  len_list = [1,2,1,1]
+  play_bar(note_list, len_list, forte, pianissimo)
+  
   in_thread do
-    
+    bars.each do |bar|
+      #bar.play
+    end
   end
 end
+
 
 if play_bass
   in_thread do
