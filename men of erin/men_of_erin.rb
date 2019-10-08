@@ -1,3 +1,5 @@
+# see https://musescore.com/user/26936575/scores/5668559
+
 pianissimo = 0.1
 piano = 0.2
 mezzo_piano = 0.3
@@ -24,9 +26,36 @@ def play_bar (pitches, durations, dynamic_start, dynamic_end)
   end
 end
 
+# 16 bars
+# 1 beat = 1 quarter note
+soprano_line = [
+  [[:r,:d4,:e4],[2,0.5,0.5],mezzo_forte,mezzo_forte],
+  
+  [[:g4,:a4],[2.75,0.25],mezzo_forte,mezzo_forte],
+  [[:b4,:a4,:g4],[2,0.25,0.75],mezzo_forte,mezzo_forte],
+  [[:g4,:g4,:e4],[0.5,2,0.5],mezzo_forte,mezzo_forte],
+  [[:d4,:d4,:e4],[2,0.5,0.5],mezzo_forte,mezzo_forte],
+  
+  [[:g4,:g4,:g4],[2,0.75,0.25],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte],
+  [[],[],mezzo_forte,mezzo_forte]
+]
 
 if play_soprano
   in_thread do
+    for bar in soprano_line
+      play_bar(bar[0], bar[1], bar[2], bar[3])
+    end
     
   end
 end
