@@ -7,9 +7,18 @@ mezzo_forte = 0.4
 forte = 0.5
 fortissimo = 0.6
 
+octave = 12
+semitone = 1
+major_second = 2
+major_third = 4
+perfect_forth = 5
+perfect_fifth = 7
+major_sixth = 9
+major_seventh = 11
+
 use_bpm 100
 
-use_synth :beep
+use_synth :piano
 
 play_soprano = true
 play_alto = true
@@ -34,7 +43,6 @@ end
 # +12 will shift up an octave
 # -2 shifts down one whole step
 # octave is five whole steps + 2 half steps, because music theory?
-
 def transpose (musical_line, interval)
   new_musical_line = []
   for bar in musical_line
@@ -70,15 +78,6 @@ melody_line = [
   BarStruct.new([:b4,:g4,:g4],[1,1.5,0.5],mezzo_forte,mezzo_forte),
   BarStruct.new([:g4],[3],mezzo_forte,mezzo_forte)
 ]
-
-octave = 12
-semitone = 1
-major_second = 2
-major_third = 4
-perfect_forth = 5
-perfect_fifth = 7
-major_sixth = 9
-major_seventh = 11
 
 t_interval = -(major_second)
 
