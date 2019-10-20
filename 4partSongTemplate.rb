@@ -14,8 +14,7 @@ play_alto = true
 play_tenor = true
 play_bass = true
 
-# pitches, durations, volumes should have same number of elements
-# maybe I could make volumes a ring?
+# pitches and durations should have same number of elements
 
 def play_bar (pitches, durations, dynamic_start, dynamic_end)
   volumes = (line dynamic_start, dynamic_end, steps: (pitches.length), inclusive: true)
