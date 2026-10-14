@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sonic Pi Compos (cewillis001) is a repo of "compos": four-part (soprano, alto, tenor, bass) arrangements of traditional and folk tunes, written as Ruby scripts for the Sonic Pi live-coding music app. Listeners clone the repo, open a `.rb` file in the Sonic Pi desktop editor (Windows), and click Run. The repo has five compos: *Men of Erin*, *Over the Sea to Skye*, *A Lusty Young Smith*, *Still Still Still* and *The Parting Glass*. It also has `4partSongTemplate.rb`. Right now each compo pastes its own copy of the helpers (`play_bar`, `BarStruct`, `transpose`, dynamic constants). The goal is to pull those helpers into one shared library that every compo loads, and then use the factory to add new public-domain arrangements built on that library. The users are the author (composing and arranging) and listeners who run the compos in Sonic Pi.
+Sonic Pi Compos (cewillis001) is a repo of "compos": four-part (soprano, alto, tenor, bass) arrangements of traditional and folk tunes, written as Ruby scripts for the Sonic Pi live-coding music app. Listeners clone the repo, open a `.rb` file in the Sonic Pi desktop editor (Windows), and click Run. The repo has five compos: *Men of Erin*, *Over the Sea to Skye*, *A Lusty Young Smith*, *Still Still Still* and *The Parting Glass*. It also has `4partSongTemplate.rb`. Right now each compo pastes its own copy of the helpers (`play_bar`, `BarStruct`, `transpose`, dynamic constants). The main use is choir rehearsal tracks. The author sets a practice mix (one singer's part loud and the other parts quiet), runs the compo in Sonic Pi, and records it with Sonic Pi's Rec button. The resulting audio file goes to the singers, who sing along while practicing their part. Solo (one part only) and full (all parts equal) are special cases of the same mix. The goal is to pull the helpers into one shared library that every compo loads, add per-voice mix levels so any practice mix is a one-line change, and then use the factory to add new public-domain arrangements built on that library. The users are the author (arranging and recording practice tracks) and choir singers (listening to the recordings to learn their parts).
 
 ## Tech Stack
 
@@ -10,7 +10,7 @@ Sonic Pi Compos (cewillis001) is a repo of "compos": four-part (soprano, alto, t
 |----------|-----------|-------|
 | Frontend | Sonic Pi desktop app (Windows) | The runtime and player. A compo is opened in an editor buffer and run there. There is no other UI. |
 | Styling  | N/A | Audio only. "Style" means synth choice (`use_synth :piano`) and dynamics. |
-| State    | Ruby constants and flags in each compo | `play_soprano`/`play_alto`/`play_tenor`/`play_bass` toggles, dynamic amp constants, `use_bpm` |
+| State    | Ruby constants and a Mix setting in each compo | Today: `play_soprano`/`play_alto`/`play_tenor`/`play_bass` on/off flags. Target: one Mix setting at the top of the compo (per-voice levels), plus dynamic amp constants and `use_bpm` |
 | Routing  | Sonic Pi `in_thread` | Each voice plays in its own thread, all in parallel |
 | Backend  | Ruby (Sonic Pi DSL) | Sonic Pi built-ins: `play`, `play_pattern_timed`, `line`, `use_synth`, `use_bpm`, note symbols (`:c4`, `:r`) |
 | Database | None | Music data lives in the source as `BarStruct` arrays |
@@ -49,14 +49,22 @@ sonic-pi-rig/
 ## Domain Model
 
 - **Composition**: a single playable `.rb` file.
-  - Fields: `title`, `key`, `time_signature` (TimeSignature), `bpm` (`use_bpm`), `synth` (e.g. `:piano`), `voices` (one per SATB part), `transpose_interval` (optional, semitones)
-  - Has 4 Voices and 1 TimeSignature
+  - Fields: `title`, `key`, `time_signature` (TimeSignature), `bpm` (`use_bpm`), `synth` (e.g. `:piano`), `voices` (one per SATB part), `transpose_interval` (optional, semitones), `mix` (the Mix to play with)
+  - Has 4 Voices, 1 TimeSignature and 1 active Mix
 - **TimeSignature**: the meter of a Composition.
   - Fields: `beats_per_bar` (e.g. 3), `beat_unit` (e.g. 4)
   - Used to check that each Bar's `durations` add up to `beats_per_bar`. Pickup (anacrusis) bars and final bars may be short, but only when marked as exceptions.
 - **Voice**: one SATB part.
-  - Fields: `name` (soprano | alto | tenor | bass), `enabled` (the `play_<name>` flag), `octave_offset` (e.g. tenor written an octave up), `line` (an ordered array of Bars)
-  - Plays in its own `in_thread`
+  - Fields: `name` (soprano | alto | tenor | bass), `octave_offset` (e.g. tenor written an octave up), `line` (an ordered array of Bars)
+  - Plays in its own `in_thread`. Its loudness comes from the active Mix. A Voice at level 0 doesn't start its thread at all.
+- **Mix**: how loud each Voice is in one practice recording. It replaces the `play_<voice>` on/off flags.
+  - Fields: `levels` (a level from 0.0 to 1.0 for each of soprano, alto, tenor, bass)
+  - Played amp = Bar dynamic × Voice level. The bar data itself is never changed.
+  - Built with helpers:
+    - `part_mix(:alto)`: the named part at full level, the others at a quiet level (default to be set in the ADR, e.g. 0.3)
+    - `solo(:alto)`: the named part at 1.0, the others at 0
+    - `full_mix`: every part at 1.0. This sounds exactly like today's compos with all flags on.
+  - One recording with Sonic Pi's Rec button = one Mix. A full set of practice tracks for a compo is 4 part mixes + 1 full mix.
 - **Bar** (`BarStruct`): one measure of one Voice.
   - Fields: `pitches` (array of note symbols, `:r` = rest), `durations` (array of beats, same length as `pitches`), `dynamic_start`, `dynamic_end` (amp values)
   - Volume is ramped linearly across the bar from `dynamic_start` to `dynamic_end` (`line … inclusive: true`)
@@ -65,7 +73,7 @@ sonic-pi-rig/
 - **Transposition**: an operation, not stored data.
   - `transpose(line, interval)` returns a new line of Bars with every pitch shifted by `interval` semitones. Rests stay rests. The input is not changed.
 
-Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1→N Bar. Bar uses Dynamic values. Transposition maps a Voice line to a new line.
+Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Composition 1→1 active Mix, which gives a level to each of the 4 Voices. Voice 1→N Bar. Bar uses Dynamic values. Transposition maps a Voice line to a new line.
 
 ## Conventions
 
@@ -73,7 +81,7 @@ Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1
 
 - File naming: new compos are `snake_case` directory + `snake_case.rb` (e.g. `danny_boy/danny_boy.rb`). Library files are `snake_case.rb` in `lib/`. Existing compo paths are not renamed.
 - Test files: `test/test_<lib_file>.rb` (minitest). Run with `ruby -Ilib -Itest test/test_<name>.rb`.
-- API routes: N/A. The "API" is the public methods of `lib/compo_helpers.rb`: `BarStruct`, `play_bar`, `play_line`, `transpose`, `validate_bars`, and the dynamic constants. Methods are `snake_case`, constants are `UPPER_SNAKE` or Sonic Pi-style lowercase names kept for backward compatibility.
+- API routes: N/A. The "API" is the public methods of `lib/compo_helpers.rb`: `BarStruct`, `play_bar`, `play_line`, `transpose`, `validate_bars`, `part_mix`, `solo`, `full_mix`, and the dynamic constants. Methods are `snake_case`, constants are `UPPER_SNAKE` or Sonic Pi-style lowercase names kept for backward compatibility.
 - Commits: conventional commits (`feat(compo): add danny boy`, `refactor(lib): extract transpose`, `test(lib): …`, `fix(men-of-erin): …`)
 - Branches: `sonic-pi-compos-<feature>` (e.g. `sonic-pi-compos-shared-lib`, `sonic-pi-compos-danny-boy`)
 
@@ -81,7 +89,9 @@ Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1
 
 - **No gems or external dependencies.** Compos and `lib/` may use only the Ruby standard library and Sonic Pi built-ins. minitest is allowed, but only under `test/`.
 - **Public-domain tunes only.** New arrangements must be traditional or public-domain melodies. Each work package records the tune's source and why it is public domain.
-- **Don't change existing sound.** Refactoring an existing compo (e.g. moving it onto the shared library) must not change any pitch, duration, dynamic, bpm, synth or voice toggle. Before/after bar data must match exactly.
+- **Don't change existing sound.** Refactoring an existing compo (e.g. moving it onto the shared library) must not change any pitch, duration, dynamic, bpm or synth. Before/after bar data must match exactly.
+- **`full_mix` must match today's sound.** Playing any compo with `full_mix` must give exactly the same amps as the pre-refactor compo with all `play_*` flags on.
+- **Recording stays manual.** Practice tracks are made with Sonic Pi's Rec button, one Mix per recording. Automating the recording or exporting audio is out of scope for now.
 - **Must run in Sonic Pi desktop (Windows).** No feature may require anything beyond opening the file in Sonic Pi and clicking Run (plus whatever one-time library setup is chosen).
 - **Open decision for the Architect:** how compos load `lib/compo_helpers.rb`. Options include Sonic Pi `run_file`/`eval_file` with a user-set path, or a build step that inlines the library. The first ADR must settle this. Pasting the helpers into every file is the current state, not the target.
 - Out of scope: other DAWs or MIDI export, a web or GUI front end, live performance tooling, audio file rendering in CI.
@@ -96,8 +106,8 @@ Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1
 |-----------|--------------------------|--------------------------|
 | Planner   | Feature request (e.g. "arrange *Danny Boy* in SATB" or "extract transpose into lib") + full PROJECT_MANIFEST.md | Human / beads issue |
 | Architect | Work package naming the affected Compositions, Voices and library methods + Tech Stack + Constraints | Planner (`docs/work-packages/sonic-pi-compos.md`) |
-| Designer  | Approved ADR (library API, how compos load it, TimeSignature validation rules) + Domain Model | Architect (`docs/adr/NNNN-sonic-pi-compos.md`) after Gate 1 |
-| Coder     | Design spec: library method signatures, or for a new compo its key, TimeSignature, bpm, synth, the Bar layout for each Voice, and the Dynamic plan + Conventions | Designer (`docs/design/sonic-pi-compos-spec.md`) |
+| Designer  | Approved ADR (library API, how compos load it, TimeSignature validation rules, Mix levels) + Domain Model | Architect (`docs/adr/NNNN-sonic-pi-compos.md`) after Gate 1 |
+| Coder     | Design spec: library method signatures, or for a new compo its key, TimeSignature, bpm, synth, the Bar layout for each Voice, the Dynamic plan and the default Mix + Conventions | Designer (`docs/design/sonic-pi-compos-spec.md`) |
 | Reviewer  | Code diff on feature branch + test/`ruby -c` output + Review Standards | Coder (branch `sonic-pi-compos-<feature>`) |
 | Deployer  | Review report + human listening sign-off + Release Criteria | Reviewer (`docs/review-reports/sonic-pi-compos-review.md`) after Gate 2 |
 
@@ -116,11 +126,13 @@ Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1
 - [ ] The compo plays clean in Sonic Pi: a human loads it in Sonic Pi on Windows, clicks Run, and it plays start to finish with no errors.
 - [ ] Bar durations validate: each Bar's `durations` add up to the Composition's TimeSignature `beats_per_bar`. Pickup and final bars are allowed only when marked. Checked automatically by `validate_bars`.
 - [ ] Helper tests pass: the minitest suite for `lib/` passes with plain `ruby`, outside Sonic Pi.
-- [ ] All 4 voices are toggleable: soprano, alto, tenor and bass can each be switched on and off on their own with a `play_<voice>` flag.
+- [ ] Any practice mix is one line: changing the Mix at the top of the compo (`part_mix(:tenor)`, `solo(:bass)`, `full_mix`) is all it takes to record a different practice track.
+- [ ] In a `part_mix`, the featured part is clearly louder than the others when listened to, and every part can still be heard.
 
 ### Factory-Level Success
 
 - [ ] Every compo, existing and new, loads the shared `lib/compo_helpers.rb` instead of a pasted copy of the helpers.
+- [ ] Every compo supports Mix, so the full set of 5 practice tracks (4 part mixes + full) can be recorded for any of them.
 - [ ] `ruby -c` passes on every `.rb` file, and the full minitest suite passes on a clean checkout with no gems beyond minitest.
 - [ ] Existing compos produce the same bar data (pitches, durations, dynamics) before and after refactoring.
 
@@ -133,7 +145,8 @@ Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1
 - Each Voice's Bars match the Designer's spec: same pitches, durations and dynamics, in order.
 - `pitches.length == durations.length` for every Bar.
 - Bar durations add up to the TimeSignature's `beats_per_bar`, except for marked pickup or final bars.
-- Each Composition defines all four `play_soprano/alto/tenor/bass` flags, and each flag gates its own `in_thread`.
+- Each Composition sets its Mix in one place at the top. Each Voice's amp is its Bar dynamic × its Mix level. A Voice at level 0 doesn't start its `in_thread`.
+- Mix levels are never written into bar data. Bars keep the arranged dynamics.
 - Transposition and octave offsets are applied as the spec says. `transpose` never changes its input line.
 - Refactors of existing compos: the before/after bar data diff is empty.
 
@@ -167,13 +180,15 @@ Relationships: Composition 1→1 TimeSignature. Composition 1→4 Voice. Voice 1
 2. [ ] The minitest suite under `test/` passes with plain `ruby` (no gems beyond minitest).
 3. [ ] `validate_bars` passes for every Voice of every changed Composition against its TimeSignature.
 4. [ ] For refactored existing compos, the bar data matches the pre-refactor version exactly.
-5. [ ] A human listening check in Sonic Pi on Windows is recorded: the compo plays start to finish, with each voice toggled on and off.
-6. [ ] The public-domain source of each new tune is recorded in the compo header and work package.
-7. [ ] Reviewer report has no open High-severity findings, and Gate 2 is approved.
+5. [ ] A human listening check in Sonic Pi on Windows is recorded: the compo plays start to finish with `full_mix`, and with `part_mix` for each of the 4 voices. In each part mix the featured part is clearly in front.
+6. [ ] Unit tests confirm that `full_mix` gives the same amps as the pre-refactor compo, and that `solo` gives 0 for the non-featured parts.
+7. [ ] The public-domain source of each new tune is recorded in the compo header and work package.
+8. [ ] Reviewer report has no open High-severity findings, and Gate 2 is approved.
 
 ### Informational (reported but non-blocking)
 
 - Number of compos on the shared library vs. still pasting helpers
+- Number of compos with Mix support vs. still using `play_*` flags
 - Total bars per compo and per voice
 - Duration-validation exceptions used (pickup/final bars)
 - Run time of each compo at its bpm
